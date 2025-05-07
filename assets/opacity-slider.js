@@ -5,35 +5,56 @@ function setOpacity(value) {
   }
 }
 
-// Créer et ajouter le contrôle d'opacité
+// Créer et ajouter le sélecteur d'IA et le bouton toujours visible
 document.addEventListener('DOMContentLoaded', () => {
-  // Créer le conteneur du curseur
-  const opacityContainer = document.createElement('div');
-  opacityContainer.className = 'opacity-container';
-  opacityContainer.style.cssText = 'display: flex; align-items: center; margin-left: 15px; -webkit-app-region: no-drag;';
+  // Créer le conteneur principal
+  const controlsContainer = document.createElement('div');
+  controlsContainer.className = 'controls-container';
+  controlsContainer.style.cssText = 'display: flex; align-items: center; margin-left: 15px; -webkit-app-region: no-drag;';
   
-  // Ajouter une étiquette
-  const opacityLabel = document.createElement('div');
-  opacityLabel.textContent = 'Opacité:';
-  opacityLabel.style.cssText = 'font-size: 11px; color: #aaa; margin-right: 5px;';
+  // Créer le sélecteur d'IA
+  const aiSelectorContainer = document.createElement('div');
+  aiSelectorContainer.className = 'ai-selector-container';
+  aiSelectorContainer.style.cssText = 'display: flex; align-items: center;';
   
-  // Créer le curseur de contrôle d'opacité
-  const opacitySlider = document.createElement('input');
-  opacitySlider.type = 'range';
-  opacitySlider.min = '30';
-  opacitySlider.max = '100';
-  opacitySlider.value = '100';
-  opacitySlider.style.cssText = 'width: 60px; height: 3px;';
+  // Créer le sélecteur déroulant
+  const aiSelector = document.createElement('select');
+  aiSelector.className = 'ai-selector';
+  aiSelector.style.cssText = 'background-color: rgba(255, 255, 255, 0.1); color: #fff; border: none; border-radius: 4px; padding: 2px 6px; font-size: 12px; cursor: pointer; outline: none;';
   
-  // Ajouter l'événement de changement
-  opacitySlider.addEventListener('input', () => {
-    const opacity = parseInt(opacitySlider.value) / 100;
-    setOpacity(opacity);
+  // Définir les options du sélecteur
+  const aiOptions = [
+    { id: 'gpt', name: 'ChatGPT' },
+    { id: 'claude', name: 'Claude' },
+    { id: 'deepseek', name: 'Deepseek' },
+    { id: 'grok', name: 'Grok' }
+  ];
+  
+  // Ajouter les options au sélecteur
+  aiOptions.forEach(ai => {
+    const option = document.createElement('option');
+    option.style.cssText="color:black; line-height: 2rem;";
+    option.value = ai.id;
+    option.textContent = ai.name;
+    aiSelector.appendChild(option);
   });
   
-  // Assembler les éléments
-  opacityContainer.appendChild(opacityLabel);
-  opacityContainer.appendChild(opacitySlider);
+  // Ajouter l'événement de changement
+  aiSelector.addEventListener('change', () => {
+    if (window.electronAPI && window.electronAPI.switchAI) {
+      window.electronAPI.switchAI(aiSelector.value);
+    }
+  });
+  
+  // Mettre à jour le sélecteur lorsque l'IA change
+  if (window.electronAPI && window.electronAPI.onCurrentAIChanged) {
+    window.electronAPI.onCurrentAIChanged((aiId) => {
+      aiSelector.value = aiId;
+    });
+  }
+  
+  // Assembler les éléments du sélecteur d'IA
+  aiSelectorContainer.appendChild(aiSelector);
   
   // Créer le bouton toujours visible 
   const alwaysOnTopBtn = document.createElement('div');
@@ -74,12 +95,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   
-  // Ajouter le bouton toujours visible après le slider d'opacité
-  opacityContainer.appendChild(alwaysOnTopBtn);
+  // Ajouter les composants dans le bon ordre: sélecteur d'IA puis bouton toujours visible
+  controlsContainer.appendChild(aiSelectorContainer);
+  controlsContainer.appendChild(alwaysOnTopBtn);
+  
+  // Note: Le contrôle d'opacité est masqué selon la demande
   
   // Ajouter à la barre de titre
   const titlebar = document.querySelector('.titlebar');
   if (titlebar) {
-    titlebar.insertBefore(opacityContainer, titlebar.lastChild);
+    titlebar.insertBefore(controlsContainer, titlebar.lastChild);
   }
 });

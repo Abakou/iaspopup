@@ -3,6 +3,140 @@ const path = require('path');
 
 let mainWindow;
 let tray;
+let currentAI = 'gpt'; // Par défaut, on commence avec ChatGPT
+let aiViews = {}; // Stocke les vues pour chaque IA
+
+const aiUrls = {
+  'gpt': 'https://chat.openai.com/',
+  'claude': 'https://claude.ai/',
+  'deepseek': 'https://chat.deepseek.com/',
+  'grok': 'https://grok.x.ai/'
+};
+
+const aiNames = {
+  'gpt': 'ChatGPT',
+  'claude': 'Claude',
+  'deepseek': 'Deepseek',
+  'grok': 'Grok'
+};
+
+// Fonction pour créer une vue pour chaque IA
+function createAIViews() {
+  Object.keys(aiUrls).forEach(aiId => {
+    const view = new BrowserView({
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+        preload: path.join(__dirname, 'preload.js'),
+        partition: `persist:${aiId}` // Sessions séparées pour chaque IA
+      }
+    });
+    
+    // Définir les dimensions initiales
+    const bounds = mainWindow.getBounds();
+    view.setBounds({ x: 0, y: 30, width: bounds.width, height: bounds.height - 30 });
+    view.setAutoResize({ width: true, height: true });
+    
+    // Charger l'URL de l'IA
+    view.webContents.loadURL(aiUrls[aiId]);
+    
+    // Injecter le script pour gérer la touche Enter après le chargement de la page
+    view.webContents.on('did-finish-load', () => {
+      const fs = require('fs');
+      const enterHandlerScript = fs.readFileSync(
+        path.join(__dirname, 'assets/prompt-textarea-enter.js'), 
+        'utf8'
+      );
+      
+      // Injecter le script dans la page
+      view.webContents.executeJavaScript(enterHandlerScript);
+    });
+    
+    // Stocker la vue
+    aiViews[aiId] = view;
+  });
+}
+
+// Fonction pour basculer entre les IA
+function switchToAI(aiId) {
+  if (!aiViews[aiId]) return;
+  
+  // Masquer toutes les vues
+  Object.keys(aiViews).forEach(id => {
+    mainWindow.removeBrowserView(aiViews[id]);
+  });
+  
+  // Afficher la vue sélectionnée
+  mainWindow.setBrowserView(aiViews[aiId]);
+  
+  // Mettre à jour l'état actuel
+  currentAI = aiId;
+  
+  // Mettre à jour l'interface
+  if (mainWindow.webContents) {
+    mainWindow.webContents.send('current-ai-changed', aiId, aiNames[aiId]);
+  }
+  
+  // Mettre à jour le menu de la barre des tâches
+  updateTrayMenu();
+}
+
+// Fonction pour mettre à jour le menu contextuel de la barre des tâches
+function updateTrayMenu() {
+  if (!tray) return;
+  
+  const aiMenuItems = Object.keys(aiUrls).map(aiId => ({
+    label: aiNames[aiId],
+    type: 'radio',
+    checked: currentAI === aiId,
+    click: () => {
+      switchToAI(aiId);
+    }
+  }));
+  
+  const contextMenu = Menu.buildFromTemplate([
+    { 
+      label: 'Afficher', 
+      click: () => {
+        if (mainWindow) {
+          mainWindow.show();
+          mainWindow.focus();
+        }
+      } 
+    },
+    { type: 'separator' },
+    ...aiMenuItems,
+    { type: 'separator' },
+    { 
+      label: 'Toujours au premier plan', 
+      type: 'checkbox',
+      checked: mainWindow ? mainWindow.isAlwaysOnTop() : true,
+      click: (menuItem) => {
+        if (mainWindow) {
+          mainWindow.setAlwaysOnTop(menuItem.checked);
+          mainWindow.webContents.send('always-on-top-changed', menuItem.checked);
+        }
+      } 
+    },
+    { 
+      label: 'Démarrer avec Windows', 
+      type: 'checkbox',
+      checked: getAutoLaunchEnabled(),
+      click: (menuItem) => {
+        setAutoLaunchEnabled(menuItem.checked);
+      } 
+    },
+    { type: 'separator' },
+    { 
+      label: 'Quitter', 
+      click: () => { 
+        app.quit(); 
+      } 
+    }
+  ]);
+  
+  tray.setContextMenu(contextMenu);
+}
 
 function createWindow() {
   // Créer la fenêtre du navigateur avec une barre de titre personnalisée
@@ -17,40 +151,23 @@ function createWindow() {
     },
     alwaysOnTop: true, // Force la fenêtre à rester au premier plan
     icon: path.join(__dirname, 'assets/chatgpt-popup-icon.ico'),
-    backgroundColor: '#343541'
-  });
-
-  // Créer une vue pour le contenu web
-  const view = new BrowserView({
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js')
-    }
-  });
-  
-  mainWindow.setBrowserView(view);
-  view.setBounds({ x: 0, y: 30, width: 420, height: 570 });
-  view.setAutoResize({ width: true, height: true });
-  
-  // Charger ChatGPT dans la vue
-  view.webContents.loadURL('https://chat.openai.com/');
-
-  // Injecter le script pour gérer la touche Enter après le chargement de la page
-  view.webContents.on('did-finish-load', () => {
-  
-    const fs = require('fs');
-    const enterHandlerScript = fs.readFileSync(
-      path.join(__dirname, 'assets/prompt-textarea-enter.js'), 
-      'utf8'
-    );
-    
-    // Injecter le script dans la page
-    view.webContents.executeJavaScript(enterHandlerScript);
+    backgroundColor: '#343541',
   });
 
   // Afficher une barre de titre personnalisée dans la fenêtre principale
   mainWindow.loadFile('titlebar.html');
+
+  // Créer une vue pour chaque IA
+  createAIViews();
+  
+  // Afficher l'IA par défaut
+  switchToAI(currentAI);
+
+  // Informer l'interface de l'état initial de "toujours visible"
+  mainWindow.webContents.on('did-finish-load', () => {
+    mainWindow.webContents.send('always-on-top-changed', mainWindow.isAlwaysOnTop());
+    mainWindow.webContents.send('current-ai-changed', currentAI, aiNames[currentAI]);
+  });
 
   // Gestion des événements de la fenêtre
   ipcMain.on('minimize-window', () => {
@@ -65,21 +182,21 @@ function createWindow() {
       
       // Ajuster la vue au nouvel espace
       const bounds = mainWindow.getBounds();
-      view.setBounds({ x: 0, y: 30, width: bounds.width, height: bounds.height - 30 });
+      if (aiViews[currentAI]) {
+        aiViews[currentAI].setBounds({ x: 0, y: 30, width: bounds.width, height: bounds.height - 30 });
+      }
     }
   });
 
   ipcMain.on('close-window', () => {
     mainWindow.close();
   });
-
-  // Gérer le changement d'opacité
-  ipcMain.on('set-opacity', (event, opacity) => {
-    if (mainWindow) {
-      mainWindow.setOpacity(opacity);
-    }
-  });
   
+  // Gérer le changement d'IA
+  ipcMain.on('switch-ai', (event, aiId) => {
+    switchToAI(aiId);
+  });
+
   // Gérer le basculement de l'option "toujours visible"
   ipcMain.on('toggle-always-on-top', () => {
     if (mainWindow) {
@@ -89,54 +206,17 @@ function createWindow() {
       // Notifier la fenêtre de l'état actuel
       mainWindow.webContents.send('always-on-top-changed', isAlwaysOnTop);
       
-      // Mettre à jour l'état dans le menu contextuel de la barre des tâches
-      const contextMenu = Menu.buildFromTemplate([
-        { 
-          label: 'Afficher', 
-          click: () => {
-            if (mainWindow) {
-              mainWindow.show();
-              mainWindow.focus();
-            }
-          } 
-        },
-        { 
-          label: 'Toujours au premier plan', 
-          type: 'checkbox',
-          checked: isAlwaysOnTop,
-          click: (menuItem) => {
-            if (mainWindow) {
-              mainWindow.setAlwaysOnTop(menuItem.checked);
-              mainWindow.webContents.send('always-on-top-changed', menuItem.checked);
-            }
-          } 
-        },
-        { 
-          label: 'Démarrer avec Windows', 
-          type: 'checkbox',
-          checked: getAutoLaunchEnabled(),
-          click: (menuItem) => {
-            setAutoLaunchEnabled(menuItem.checked);
-          } 
-        },
-        { type: 'separator' },
-        { 
-          label: 'Quitter', 
-          click: () => { 
-            app.quit(); 
-          } 
-        }
-      ]);
-      
-      // Mettre à jour le menu contextuel de la barre des tâches
-      tray.setContextMenu(contextMenu);
+      // Mettre à jour le menu de la barre des tâches
+      updateTrayMenu();
     }
   });
   
   // Redimensionner la vue lors du redimensionnement de la fenêtre
   mainWindow.on('resize', () => {
     const bounds = mainWindow.getBounds();
-    view.setBounds({ x: 0, y: 30, width: bounds.width, height: bounds.height - 30 });
+    if (aiViews[currentAI]) {
+      aiViews[currentAI].setBounds({ x: 0, y: 30, width: bounds.width, height: bounds.height - 30 });
+    }
   });
   
   // Ajuster l'opacité lorsque la fenêtre gagne/perd le focus
@@ -171,49 +251,11 @@ function createTray() {
   // Créer une icône dans la barre des tâches
   tray = new Tray(path.join(__dirname, 'assets/chatgpt-popup-icon.ico'));
   
-  // Définir le menu contextuel (clic droit)
-  const contextMenu = Menu.buildFromTemplate([
-    { 
-      label: 'Afficher', 
-      click: () => {
-        if (mainWindow) {
-          mainWindow.show();
-          mainWindow.focus();
-        }
-      } 
-    },
-    { 
-      label: 'Toujours au premier plan', 
-      type: 'checkbox',
-      checked: true,
-      click: (menuItem) => {
-        if (mainWindow) {
-          mainWindow.setAlwaysOnTop(menuItem.checked);
-        }
-      } 
-    },
-    { 
-      label: 'Démarrer avec Windows', 
-      type: 'checkbox',
-      checked: getAutoLaunchEnabled(),
-      click: (menuItem) => {
-        setAutoLaunchEnabled(menuItem.checked);
-      } 
-    },
-    { type: 'separator' },
-    { 
-      label: 'Quitter', 
-      click: () => { 
-        app.quit(); 
-      } 
-    }
-  ]);
+  // Mettre à jour le menu
+  updateTrayMenu();
   
   // Définir le titre au survol
-  tray.setToolTip('ChatGPT Popup');
-  
-  // Définir le menu contextuel
-  tray.setContextMenu(contextMenu);
+  tray.setToolTip('AI Chat Popup');
   
   // Clic gauche sur l'icône
   tray.on('click', () => {

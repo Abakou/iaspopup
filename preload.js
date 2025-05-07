@@ -7,5 +7,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   toggleMaximize: () => ipcRenderer.send('toggle-maximize'),
   setOpacity: (opacity) => ipcRenderer.send('set-opacity', opacity),
   toggleAlwaysOnTop: () => ipcRenderer.send('toggle-always-on-top'),
-  onAlwaysOnTopChanged: (callback) => ipcRenderer.on('always-on-top-changed', (_, value) => callback(value))
+  onAlwaysOnTopChanged: (callback) => ipcRenderer.on('always-on-top-changed', (_, value) => callback(value)),
+  switchAI: (aiId) => ipcRenderer.send('switch-ai', aiId),
+  onCurrentAIChanged: (callback) => ipcRenderer.on('current-ai-changed', (_, aiId, aiName) => callback(aiId, aiName))
 });
