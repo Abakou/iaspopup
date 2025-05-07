@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fond rond principal (vert ChatGPT) -->
+  <circle cx="128" cy="128" r="128" fill="#10A37F"/>
+  
+  <!-- Symbole ChatGPT (simplifié) -->
+  <path d="M80 100C80 88.9543 88.9543 80 100 80H156C167.046 80 176 88.9543 176 100V156C176 167.046 167.046 176 156 176H100C88.9543 176 80 167.046 80 156V100Z" fill="white"/>
+  <path d="M128 140C134.627 140 140 134.627 140 128C140 121.373 134.627 116 128 116C121.373 116 116 121.373 116 128C116 134.627 121.373 140 128 140Z" fill="#10A37F"/>
+  
+  <!-- Indicateur de popup (petit cercle rouge dans le coin supérieur droit) -->
+  <circle cx="190" cy="66" r="30" fill="#FF5F56"/>
+  <path d="M190 56V76M180 66H200" stroke="white" stroke-width="4"/>
+</svg>

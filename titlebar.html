@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>ChatGPT Popup</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: #343541;
+            color: white;
+            height: 30px;
+            overflow: hidden;
+            user-select: none;
+        }
+        
+        .titlebar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 30px;
+            -webkit-app-region: drag;
+            padding: 0 10px;
+        }
+        
+        .window-controls {
+            display: flex;
+            align-items: center;
+            -webkit-app-region: no-drag;
+        }
+        
+        .control-button {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        
+        .control-button:hover {
+            opacity: 0.8;
+        }
+        
+        .close {
+            background-color: #ff5f56;
+        }
+        
+        .minimize {
+            background-color: #ffbd2e;
+        }
+        
+        .maximize {
+            background-color: #27c93f;
+        }
+        
+        .title {
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .spacer {
+            width: 60px;
+        }
+        
+        .window-actions {
+            display: flex;
+            align-items: center;
+            -webkit-app-region: no-drag;
+            margin-right: 10px;
+        }
+        
+        .toggle-button {
+            display: flex;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            padding: 2px 6px;
+            cursor: pointer;
+            margin-left: 8px;
+            position: relative;
+        }
+        
+        .toggle-button:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .pin-icon {
+            font-size: 12px;
+            margin-right: 4px;
+        }
+        
+        .status-indicator {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            margin-left: 2px;
+        }
+        
+        .status-indicator.active {
+            background-color: #27c93f;
+        }
+        
+        .status-indicator.inactive {
+            background-color: #aaa;
+        }
+    </style>
+    <!-- Style pour le curseur d'opacité -->
+    <style>
+        input[type=range] {
+            -webkit-appearance: none;
+            height: 3px;
+            background: #555;
+            border-radius: 5px;
+        }
+        
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #aaa;
+            cursor: pointer;
+        }
+        
+        input[type=range]:hover::-webkit-slider-thumb {
+            background: #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="titlebar">
+        <div class="window-controls">
+            <div class="control-button close" id="closeBtn"></div>
+            <div class="control-button minimize" id="minimizeBtn"></div>
+            <div class="control-button maximize" id="maximizeBtn"></div>
+        </div>
+        <div class="title">ChatGPT</div>
+        
+        <div class="window-actions">
+        </div>
+    </div>
+
+    <script>
+        // Communiquer avec le processus principal
+        document.getElementById('closeBtn').addEventListener('click', () => {
+            window.electronAPI.closeWindow();
+        });
+        
+        document.getElementById('minimizeBtn').addEventListener('click', () => {
+            window.electronAPI.minimizeWindow();
+        });
+        
+        document.getElementById('maximizeBtn').addEventListener('click', () => {
+            window.electronAPI.toggleMaximize();
+        });
+    </script>
+    
+    <!-- Inclure le script pour le curseur d'opacité -->
+    <script src="./assets/opacity-slider.js"></script>
+</body>
+</html>
