@@ -150,7 +150,7 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js')
     },
     alwaysOnTop: true, // Force la fenêtre à rester au premier plan
-    icon: path.join(__dirname, 'assets/chatgpt-popup-icon.ico'),
+    icon: path.join(__dirname, 'assets/companions-icon.ico'),
     backgroundColor: '#343541',
   });
 
@@ -249,13 +249,13 @@ function setAutoLaunchEnabled(enabled) {
 
 function createTray() {
   // Créer une icône dans la barre des tâches
-  tray = new Tray(path.join(__dirname, 'assets/chatgpt-popup-icon.ico'));
+  tray = new Tray(path.join(__dirname, 'assets/companions-icon.ico'));
   
   // Mettre à jour le menu
   updateTrayMenu();
   
   // Définir le titre au survol
-  tray.setToolTip('AI Chat Popup');
+  tray.setToolTip('Companions');
   
   // Clic gauche sur l'icône
   tray.on('click', () => {

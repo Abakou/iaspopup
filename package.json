@@ -1,7 +1,7 @@
 {
   "name": "gptpopup",
   "version": "1.0.0",
-  "description": "Fenêtre ChatGPT minimaliste toujours visible",
+  "description": "Fenêtre minimaliste toujours visible pour les agents de chat ia",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
@@ -15,8 +15,8 @@
     "electron-builder": "^24.9.1"
   },
   "build": {
-    "appId": "com.chatgpt.popup",
-    "productName": "ChatGPT Popup",
+    "appId": "com.companions.popup",
+    "productName": "Companions",
     "directories": {
       "output": "dist"
     },
@@ -24,7 +24,7 @@
       "target": [
         "nsis"
       ],
-      "icon": "assets/chatgpt-popup-icon.ico"
+      "icon": "assets/companions-icon.ico"
     },
     "nsis": {
       "oneClick": false,

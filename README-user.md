@@ -1,6 +1,6 @@
-# ChatGPT Popup
+# Companions
 
-Une application légère qui affiche ChatGPT dans une fenêtre flottante toujours visible sur votre écran de travail.
+Une application légère qui affiche Les agent de chat ia dans une fenêtre flottante toujours visible sur votre écran de travail.
 
 ## Fonctionnalités
 
@@ -33,4 +33,4 @@ Cliquez avec le bouton droit sur l'icône dans la barre des tâches pour accéde
 
 ## Remarques
 
-Cette application nécessite une connexion Internet et un compte ChatGPT.
+Cette application nécessite une connexion Internet et un compte ChatGPT ou autre.
