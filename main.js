@@ -7,10 +7,10 @@ let currentAI = 'gpt'; // Par défaut, on commence avec ChatGPT
 let aiViews = {}; // Stocke les vues pour chaque IA
 
 const aiUrls = {
-  'gpt': 'https://chat.openai.com/',
-  'claude': 'https://claude.ai/',
-  'deepseek': 'https://chat.deepseek.com/',
-  'grok': 'https://grok.x.ai/'
+  'gpt': 'https://chat.openai.com',
+  'claude': 'https://claude.ai',
+  'deepseek': 'https://chat.deepseek.com',
+  'grok': 'https://grok.com'
 };
 
 const aiNames = {

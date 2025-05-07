@@ -11,8 +11,8 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^29.0.0",
-    "electron-builder": "^24.9.1"
+    "electron": "^36.1.0",
+    "electron-builder": "^26.0.12"
   },
   "build": {
     "appId": "com.companions.popup",

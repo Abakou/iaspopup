@@ -1,4 +1,4 @@
-# ChatGPT Popup
+# Companions
 
 Une application minimaliste qui affiche ChatGPT dans une fenêtre toujours visible sur votre écran de travail.
 
